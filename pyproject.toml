@@ -98,4 +98,4 @@ filterwarnings = [
 ]
 
 [tool.uv.sources]
-pybefit = { git = "https://github.com/conorheins/pybefit" }
+pybefit = { git = "https://github.com/conorheins/pybefit.git", rev = "fix/pymdp-compat" }
