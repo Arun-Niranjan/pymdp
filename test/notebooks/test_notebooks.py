@@ -111,7 +111,6 @@ def test_advanced_notebooks(notebook):
 
 @pytest.mark.notebook
 @pytest.mark.slow
-@pytest.mark.skip("model fitting notebook is currently being migrated, see https://github.com/infer-actively/pymdp/issues/287")
 @pytest.mark.parametrize("notebook", MODEL_FITTING_NOTEBOOKS)
 def test_model_fitting_notebooks(notebook):
     """Test model fitting and inversion notebooks."""
