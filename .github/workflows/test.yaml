@@ -30,3 +30,6 @@ jobs:
       - name: Running unit tests
         run: |
           uv run pytest test
+      - name: Running notebook tests
+        run: |
+          uv run pytest --nbval examples/api/
