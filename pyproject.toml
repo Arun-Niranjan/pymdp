@@ -23,7 +23,7 @@ classifiers=[
 ]
 requires-python = ">=3.10"
 dependencies = [
-    'numpy>=1.19.5', 
+    'numpy>=1.19.5',
     'jax>=0.3.4',
     'jaxlib>=0.3.4',
     'equinox>=0.9',
@@ -32,7 +32,18 @@ dependencies = [
     'seaborn>=0.11.1',
     'mctx>=0.0.5',
     'networkx>=3.3',
-    'pytest>=6.2.1',
+]
+
+[dependency-groups]
+test = [
+    "ipykernel>=7.1.0",
+    "jupyter>=1.1.1",
+    "mediapy>=1.2.4",
+    "nbval>=0.11.0",
+    "pybefit",
+    "pygraphviz>=1.14",
+    "pytest>=8.4.2",
+    "pytest-timeout>=2.4.0",
 ]
 
 [project.optional-dependencies]
@@ -42,12 +53,12 @@ gpu = [
 ]
 
 nb = [
-        'mediapy>=1.2.4',
-        'pygraphviz>=1.14',
-    ]
+    'mediapy>=1.2.4',
+    'pygraphviz>=1.14',
+]
 
 modelfit = [
-    "pybefit @ git+https://github.com/conorheins/pybefit.git@fix/pymdp-compat",
+    "pybefit",
 ]
 
 [project.urls]
@@ -74,3 +85,14 @@ line-length = 88
 [tool.ruff]
 line-length = 88
 lint.ignore = ["E731", "E741", "F401", "E402", "F811"]
+
+[tool.pytest.ini_options]
+minversion = "6.2.1"
+addopts = "--ignore=examples/legacy"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
+]
+
+[tool.uv.sources]
+pybefit = { git = "https://github.com/conorheins/pybefit.git", rev = "fix/pymdp-compat" }
