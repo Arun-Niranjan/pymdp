@@ -60,6 +60,16 @@ EXPERIMENTAL_NOTEBOOKS = [
     EXAMPLES_DIR / "experimental" / "sophisticated_inference" / "mcts_generalized_tmaze.ipynb",
 ]
 
+# Legacy notebooks (NumPy-based implementation)
+LEGACY_NOTEBOOKS = [
+    EXAMPLES_DIR / "legacy" / "agent_demo.ipynb",
+    EXAMPLES_DIR / "legacy" / "free_energy_calculation.ipynb",
+    EXAMPLES_DIR / "legacy" / "gridworld_tutorial_1.ipynb",
+    EXAMPLES_DIR / "legacy" / "gridworld_tutorial_2.ipynb",
+    EXAMPLES_DIR / "legacy" / "tmaze_demo.ipynb",
+    EXAMPLES_DIR / "legacy" / "tmaze_learning_demo.ipynb",
+]
+
 
 @pytest.mark.notebook
 @pytest.mark.fast
@@ -130,4 +140,12 @@ def test_sparse_notebooks(notebook):
 @pytest.mark.parametrize("notebook", EXPERIMENTAL_NOTEBOOKS)
 def test_experimental_notebooks(notebook):
     """Test experimental feature notebooks (may be unstable)."""
+    assert notebook.exists(), f"Notebook not found: {notebook}"
+
+
+@pytest.mark.notebook
+@pytest.mark.skip(reason="Legacy notebooks use NumPy-based implementation and are not actively maintained")
+@pytest.mark.parametrize("notebook", LEGACY_NOTEBOOKS)
+def test_legacy_notebooks(notebook):
+    """Test legacy NumPy-based notebooks (skipped by default)."""
     assert notebook.exists(), f"Notebook not found: {notebook}"
