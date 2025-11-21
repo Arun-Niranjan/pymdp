@@ -88,12 +88,7 @@ lint.ignore = ["E731", "E741", "F401", "E402", "F811"]
 
 [tool.pytest.ini_options]
 minversion = "6.2.1"
-markers = [
-    "notebook: notebook tests",
-    "fast: fast-running tests suitable for every PR",
-    "slow: slow-running tests (run on schedule)",
-    "experimental: experimental/potentially unstable tests",
-]
+addopts = "--ignore=examples/legacy"
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::FutureWarning",
