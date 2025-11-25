@@ -91,7 +91,7 @@ lint.ignore = ["E731", "E741", "F401", "E402", "F811"]
 minversion = "6.2.1"
 addopts = """
     --ignore=examples/legacy
-    -n 2
+    -n 1
     --dist worksteal
 """
 filterwarnings = [
