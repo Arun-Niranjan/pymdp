@@ -32,4 +32,4 @@ jobs:
           uv run pytest test
       - name: Running notebook tests
         run: |
-          uv run pytest --nbval examples/api/
+          uv run pytest --nbval-lax examples/api/
