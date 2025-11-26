@@ -65,7 +65,7 @@ class TestInferStatesComparison(unittest.TestCase):
         parameter_sets = [
             (5, 5, 5, 5, 'uniform', 'low'),
             (10, 10, 10, 10, 'uniform', 'medium'),
-            # (25, 25, 25, 25, 'uniform', 'high'),
+            (25, 25, 25, 25, 'uniform', 'high'),
             # (125, 125, 125, 125, 'uniform', 'extreme'),  # Uncomment to include extreme cases
         ]
 

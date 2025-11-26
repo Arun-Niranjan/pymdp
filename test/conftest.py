@@ -19,7 +19,7 @@ def pytest_configure(config):
 
     # Limit memory fraction per device (to prevent OOM kills)
     if 'XLA_PYTHON_CLIENT_MEM_FRACTION' not in os.environ:
-        os.environ['XLA_PYTHON_CLIENT_MEM_FRACTION'] = '0.25'
+        os.environ['XLA_PYTHON_CLIENT_MEM_FRACTION'] = '0.20'
 
     # Enable JAX compilation cache for faster repeated runs
     if 'JAX_COMPILATION_CACHE_DIR' not in os.environ:
