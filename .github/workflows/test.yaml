@@ -29,7 +29,7 @@ jobs:
           uv sync --group test
       - name: Running unit tests
         run: |
-          uv run pytest test
+          uv run pytest test -n 2
       - name: Running notebook tests
         run: |
           uv run pytest --nbval-lax examples/api/

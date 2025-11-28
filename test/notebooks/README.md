@@ -14,6 +14,8 @@ All notebooks in the `examples/` directory are automatically tested using `nbval
 
 ### Basic Commands
 
+:warning: `nbval` does not play nicely with `pytest-xdist` running tests in parallel. `nbval` tests must be called with a single worker (-n 1).
+
 ```bash
 # Test all non-legacy notebooks (execution only, no output validation, will only fail if an exception is raised)
 uv run pytest --nbval-lax examples/
