@@ -77,7 +77,7 @@ class TestLearningJax(unittest.TestCase):
                 obs_jax,
                 qs_jax,
                 A_dependencies=A_dependencies,
-                onehot_obs=True,
+                categorical_obs=True,
                 num_obs=num_obs,
                 lr=l_rate
             )
@@ -131,7 +131,7 @@ class TestLearningJax(unittest.TestCase):
                 obs_jax,
                 qs_jax,
                 A_dependencies=A_dependencies,
-                onehot_obs=True,
+                categorical_obs=True,
                 num_obs=num_obs,
                 lr=l_rate
             )

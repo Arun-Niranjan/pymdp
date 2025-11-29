@@ -30,10 +30,40 @@ def update_obs_likelihood_dirichlet_m(pA_m, obs_m, qs, dependencies_m, lr=1.0):
 
     return new_pA_m, A_m
     
-def update_obs_likelihood_dirichlet(pA, A, obs, qs, *, A_dependencies, onehot_obs, num_obs, lr):
-    """ JAX version of ``pymdp.learning.update_obs_likelihood_dirichlet`` """
+def update_obs_likelihood_dirichlet(pA, A, obs, qs, *, A_dependencies, categorical_obs, num_obs, lr):
+    """
+    Update Dirichlet parameters of the observation likelihood (A matrix) given observations and beliefs.
 
-    obs_m = lambda o, dim: nn.one_hot(o, dim) if not onehot_obs else o
+    JAX version of ``pymdp.learning.update_obs_likelihood_dirichlet``
+
+    Parameters
+    ----------
+    pA : list of arrays
+        Prior Dirichlet parameters for A matrices
+    A : list of arrays
+        Current A matrices (observation likelihoods)
+    obs : list
+        Observations (either discrete indices or categorical distributions depending on categorical_obs)
+    qs : list of arrays
+        Posterior beliefs over hidden states
+    A_dependencies : list of lists
+        Dependencies between observation modalities and state factors
+    categorical_obs : bool
+        If True, observations are probability distributions; if False, discrete indices
+    num_obs : list of ints
+        Number of observations for each modality
+    lr : float
+        Learning rate
+
+    Returns
+    -------
+    qA : list of arrays
+        Updated Dirichlet parameters
+    E_qA : list of arrays
+        Expected values (updated A matrices)
+    """
+
+    obs_m = lambda o, dim: nn.one_hot(o, dim) if not categorical_obs else o
     update_A_fn = lambda pA_m, o_m, dim, dependencies_m: None if pA_m is None else update_obs_likelihood_dirichlet_m(
         pA_m, obs_m(o_m, dim), qs, dependencies_m, lr=lr
     )

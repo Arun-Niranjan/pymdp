@@ -86,7 +86,7 @@ def make_aif_recurrent_fn():
 
         # recursively branch the policy + outcome tree
         choice = lambda key, po: jr.categorical(key, logits=jnp.log(po))
-        if agent.onehot_obs:
+        if agent.categorical_obs:
             sample = lambda key, po, no: nn.one_hot(choice(key, po), no)
         else:
             sample = lambda key, po, no: choice(key, po)
@@ -97,7 +97,7 @@ def make_aif_recurrent_fn():
         for no_m, qo_m in zip(agent.num_obs, qo_next_pi):
             rng_key, key = jr.split(rng_key)
             o_m = sample(key, qo_m, no_m)
-            discount *= get_prob_single_modality(o_m, qo_m, agent.onehot_obs)
+            discount *= get_prob_single_modality(o_m, qo_m, agent.categorical_obs)
             obs.append(jnp.expand_dims(o_m, 1))
 
         qs_next_posterior = agent.infer_states(obs, qs_next_pi)
