@@ -34,13 +34,18 @@ class Env(Module):
     state: List[Array]
     current_obs: List[Array]
     dependencies: Dict = field(static=True)
+    categorical_obs: bool = field(static=True)
 
-    def __init__(self, params: Dict, dependencies: Dict):
+    def __init__(self, params: Dict, dependencies: Dict, categorical_obs: bool = False):
         self.params = params
         self.dependencies = dependencies
+        self.categorical_obs = categorical_obs
 
         self.state = jtu.tree_map(lambda x: jnp.zeros([x.shape[0]]), self.params["D"])
-        self.current_obs = jtu.tree_map(lambda x: jnp.zeros([x.shape[0], x.shape[1]]), self.params["A"])
+        if categorical_obs:
+            self.current_obs = jtu.tree_map(lambda x: jnp.zeros([x.shape[0], x.shape[1]]), self.params["A"])
+        else:
+            self.current_obs = jtu.tree_map(lambda x: jnp.zeros([x.shape[0]]), self.params["A"])
 
     @vmap
     def reset(self, key: Optional[PRNGKeyArray], state: Optional[List[Array]] = None):
@@ -93,7 +98,10 @@ class Env(Module):
         _select_probs = partial(select_probs, state)
         obs_probs = jtu.tree_map(_select_probs, self.params["A"], self.dependencies["A"])
 
-        keys = list(jr.split(key, len(obs_probs)))
-        new_obs = jtu.tree_map(cat_sample, keys, obs_probs)
-        new_obs = jtu.tree_map(lambda x: jnp.expand_dims(x, -1), new_obs)
+        if self.categorical_obs:
+            new_obs = jtu.tree_map(lambda x: jnp.expand_dims(x, 0), obs_probs)
+        else:
+            keys = list(jr.split(key, len(obs_probs)))
+            new_obs = jtu.tree_map(cat_sample, keys, obs_probs)
+            new_obs = jtu.tree_map(lambda x: jnp.expand_dims(x, -1), new_obs)
         return new_obs

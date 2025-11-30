@@ -504,7 +504,7 @@ class GeneralizedTMazeEnv(Env):
     similar to the original T-maze.
     """
 
-    def __init__(self, env_info, batch_size=1):
+    def __init__(self, env_info, batch_size=1, categorical_obs=False):
         A, A_dependencies = generate_A(env_info)
         B, B_dependencies = generate_B(env_info)
         D = generate_D(env_info)
@@ -516,7 +516,7 @@ class GeneralizedTMazeEnv(Env):
         }
         dependencies = {"A": A_dependencies, "B": B_dependencies}
 
-        Env.__init__(self, params, dependencies)
+        Env.__init__(self, params, dependencies, categorical_obs=categorical_obs)
 
     def render(self, mode="human"):
         """

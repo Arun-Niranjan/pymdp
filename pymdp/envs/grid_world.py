@@ -76,6 +76,7 @@ class GridWorld(Env):
         include_stay: bool = True,
         success_prob: float = 1.0,
         batch_size: int = 1,
+        categorical_obs: bool = False,
     ):
         rows, cols = shape
         assert rows >= 1 and cols >= 1, "Grid shape must be positive."
@@ -99,7 +100,7 @@ class GridWorld(Env):
         }
         dependencies = {"A": A_deps, "B": B_deps}
 
-        super().__init__(params, dependencies)
+        super().__init__(params, dependencies, categorical_obs=categorical_obs)
 
     # ---------------------------------------------------------------------
     # Optional convenience accessors (not required by the API)

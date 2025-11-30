@@ -12,6 +12,7 @@ import jax.tree_util as jtu
 
 from pymdp.agent import Agent
 from pymdp.envs.env import Env
+from pymdp.envs import TMaze
 from pymdp.envs.rollout import rollout, default_policy_search
 from pymdp import utils
 
@@ -283,6 +284,27 @@ class TestRolloutFunction(unittest.TestCase):
         self.assertTrue(jnp.allclose(learned_pB, expected_pB, atol=1e-5))
         self.assertTrue(jnp.allclose(learned_B, expected_B, atol=1e-5))
 
+    def test_rollout_with_categorical_obs(self):
+        key = jr.PRNGKey(0)
+        batch_size=1
+        T = 5
+        env = TMaze(
+            batch_size=batch_size,
+            categorical_obs=True,
+        )
+        A, A_dependencies = env.generate_A()
+        B, B_dependencies = env.generate_B()
+        agent = Agent(
+            A=A,
+            B=B,
+            A_dependencies=A_dependencies,
+            B_dependencies=B_dependencies,
+            batch_size=batch_size,
+            policy_len=T,
+            categorical_obs=True,
+        )
+        _, info, _ = rollout(agent, env, num_timesteps=T, rng_key=key)
+        self.assertIsNotNone(info)
 
 if __name__ == "__main__":
     unittest.main()

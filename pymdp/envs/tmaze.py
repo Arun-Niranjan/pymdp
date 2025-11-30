@@ -35,7 +35,16 @@ class TMaze(Env):
     reward_condition: float = field(static=True)
     dependent_outcomes: bool = field(static=True)
 
-    def __init__(self, batch_size=1, reward_probability=1.0, punishment_probability=1.0, cue_validity=0.95, reward_condition=None, dependent_outcomes=False):
+    def __init__(
+            self, 
+            batch_size=1, 
+            reward_probability=1.0, 
+            punishment_probability=1.0, 
+            cue_validity=0.95, 
+            reward_condition=None, 
+            dependent_outcomes=False, 
+            categorical_obs=False,
+        ):
         """
         Initialize T-Maze environment. A is the observation likelihood matrix, B is the transition matrix, D is the initial state distribution.
         Args:
@@ -45,6 +54,7 @@ class TMaze(Env):
             cue_validity: Probability of cue correctly indicating reward location
             reward_condition: If specified, fixes reward to left (0) or right (1) arm, otherwise reward is randomly assigned
             dependent_outcomes: If True, punishment occurs as a function of reward probability (i.e., if reward probability is 0.8, then 20% punishment). If False, punishment occurs with set probability (i.e., 20% no outcome and punishment will only occur in the other (non-rewarding) arm)
+            categorical_obs: If True, return observations as a probability distribution instead of a discrete sample
         """
         self.reward_probability = reward_probability
         self.punishment_probability = punishment_probability
@@ -67,11 +77,11 @@ class TMaze(Env):
         }
 
         dependencies = { # specifying which matrix is dependent on which state factors allows you to not have to specify all combinations of state factors in the matrix
-            "A": A_dependencies, 
+            "A": A_dependencies,
             "B": B_dependencies,
         }
 
-        super().__init__(params, dependencies)
+        super().__init__(params, dependencies, categorical_obs=categorical_obs)
 
     def generate_A(self):
         """

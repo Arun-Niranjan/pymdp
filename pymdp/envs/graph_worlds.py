@@ -26,7 +26,7 @@ class GraphEnv(Env):
     The agent observes its own location, as well as whether the object is at its location.
     """
 
-    def __init__(self, graph: nx.Graph, object_locations: list[int], agent_locations: list[int]):
+    def __init__(self, graph: nx.Graph, object_locations: list[int], agent_locations: list[int], categorical_obs: bool = False):
         batch_size = len(object_locations)
 
         A, A_dependencies = self.generate_A(graph)
@@ -46,7 +46,7 @@ class GraphEnv(Env):
             "B": B_dependencies,
         }
 
-        super().__init__(params, dependencies)
+        super().__init__(params, dependencies, categorical_obs=categorical_obs)
 
     def generate_A(self, graph: nx.Graph):
         A = []
