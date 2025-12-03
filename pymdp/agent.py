@@ -25,7 +25,7 @@ class Agent(Module):
 
     The basic usage is as follows:
 
-    >>> my_agent = Agent(A = A, B = C, <more_params>)
+    >>> my_agent = Agent(A = A, B = B, C = C, <more_params>)
     >>> observation = env.step(initial_action)
     >>> qs = my_agent.infer_states(observation)
     >>> q_pi, G = my_agent.infer_policies(qs)
@@ -34,6 +34,26 @@ class Agent(Module):
 
     This represents one timestep of an active inference process. Wrapping this step in a loop with an ``Env()`` class that returns
     observations and takes actions as inputs, would entail a dynamic agent-environment interaction.
+
+    Observation Formats
+    -------------------
+    Observations can be provided in two formats:
+
+    1. **Discrete observations** (default, categorical_obs=False):
+       Observations are discrete indices, e.g., observation = [0, 2, 1]
+       These are internally converted to one-hot vectors.
+
+    2. **Categorical observations** (categorical_obs=True):
+       Observations are probability distributions, e.g.,
+       observation = [[0.7, 0.2, 0.1], [0.0, 1.0], ...]
+       This allows encoding uncertainty in observations, useful for:
+       - Noisy sensors with known noise models
+       - Ambiguous perceptual evidence
+       - Soft evidence from preprocessing/feature extraction
+
+       Each observation must be a valid probability distribution:
+       - All elements non-negative
+       - Sums to 1.0 along the observation dimension
     """
 
     A: List[Array]
@@ -85,7 +105,7 @@ class Agent(Module):
     use_param_info_gain: bool = field(static=True)
     # flag for whether to use inductive inference ("intentional inference") when computing expected free energy
     use_inductive: bool = field(static=True)
-    onehot_obs: bool = field(static=True)
+    categorical_obs: bool = field(static=True)
     # determinstic or stochastic action selection
     action_selection: str = field(static=True)
     # whether to sample from full posterior over policies ("full") or from marginal posterior over actions ("marginal")
@@ -128,7 +148,7 @@ class Agent(Module):
         use_states_info_gain=True,
         use_param_info_gain=False,
         use_inductive=False,
-        onehot_obs=False,
+        categorical_obs=False,
         action_selection="deterministic",
         sampling_mode="full",
         inference_algo="fpi",
@@ -337,7 +357,7 @@ class Agent(Module):
             I = jtu.tree_map(lambda x: jnp.expand_dims(jnp.zeros_like(x), 1), D)
         self.I = I
 
-        self.onehot_obs = onehot_obs
+        self.categorical_obs = categorical_obs
 
         # validate model
         self._validate()
@@ -359,7 +379,7 @@ class Agent(Module):
             
             num_states_f = B[f].shape[-(len(B_deps_f) + 1 - self_factor_index)]
             num_states.append(num_states_f)
-        
+
         return num_states
 
     def infer_parameters(self, beliefs_A, outcomes, actions, beliefs_B=None, lr_pA=1., lr_pB=1., **kwargs):
@@ -438,7 +458,7 @@ class Agent(Module):
                 learning.update_obs_likelihood_dirichlet,
                 A_dependencies=self.A_dependencies,
                 num_obs=self.num_obs,
-                onehot_obs=self.onehot_obs,
+                categorical_obs=self.categorical_obs,
             )
             
             lr = jnp.broadcast_to(lr_pA, (self.batch_size,))
@@ -472,31 +492,71 @@ class Agent(Module):
 
         return agent
 
-    def infer_states(self, observations, empirical_prior, *, past_actions=None, qs_hist=None, mask=None, onehot_obs=False):
+    def infer_states(self, observations, empirical_prior, *, past_actions=None, qs_hist=None, mask=None, categorical_obs=False):
         """
         Update approximate posterior over hidden states by solving variational inference problem, given an observation.
 
         Parameters
         ----------
-        observations: ``list`` or ``tuple`` of ints
-            The observation input. Each entry ``observation[m]`` stores one-hot vectors representing the observations for modality ``m``.
-        past_actions: ``list`` or ``tuple`` of ints
-            The action input. Each entry ``past_actions[f]`` stores indices (or one-hots?) representing the actions for control factor ``f``.
-        empirical_prior: ``list`` or ``tuple`` of ``jax.numpy.ndarray`` of dtype object
-            Empirical prior beliefs over hidden states. Depending on the inference algorithm chosen, the resulting ``empirical_prior`` variable may be a matrix (or list of matrices)
+        observations: ``list`` or ``tuple``
+            The observation input. Format depends on categorical_obs flag:
+
+            - If categorical_obs=False (default): Each entry ``observations[m]`` is an integer
+              index representing the discrete observation for modality ``m``.
+
+            - If categorical_obs=True: Each entry ``observations[m]`` is a 1D array representing
+              a probability distribution over observations for modality ``m``. Must sum to 1.0.
+
+        empirical_prior: ``list`` or ``tuple`` of ``jax.numpy.ndarray``
+            Empirical prior beliefs over hidden states. Depending on the inference algorithm chosen,
+            the resulting ``empirical_prior`` variable may be a matrix (or list of matrices)
             of additional dimensions to encode extra conditioning variables like timepoint and policy.
+
+        past_actions: ``list`` or ``tuple`` of ints, optional
+            The action input. Each entry ``past_actions[f]`` stores indices representing the actions
+            for control factor ``f``.
+
+        qs_hist: ``list`` or ``tuple`` of ``jax.numpy.ndarray``, optional
+            History of posterior beliefs over hidden states.
+
+        mask: ``list`` or ``tuple``, optional
+            Mask for observations.
+
+        categorical_obs: bool, default False
+            If True, treat observations as probability distributions rather than discrete indices.
+            Overrides self.categorical_obs for this call.
+
         Returns
-        ---------
-        qs: ``numpy.ndarray`` of dtype object
-            Posterior beliefs over hidden states. Depending on the inference algorithm chosen, the resulting ``qs`` variable will have additional sub-structure to reflect whether
+        -------
+        qs: ``list`` of ``jax.numpy.ndarray``
+            Posterior beliefs over hidden states. Depending on the inference algorithm chosen,
+            the resulting ``qs`` variable will have additional sub-structure to reflect whether
             beliefs are additionally conditioned on timepoint and policy.
-            For example, in case the ``self.inference_algo == 'MMP' `` indexing structure is policy->timepoint-->factor, so that
-            ``qs[p_idx][t_idx][f_idx]`` refers to beliefs about marginal factor ``f_idx`` expected under policy ``p_idx``
-            at timepoint ``t_idx``.
+            For example, in case the ``self.inference_algo == 'MMP'`` indexing structure is
+            policy->timepoint->factor, so that ``qs[p_idx][t_idx][f_idx]`` refers to beliefs
+            about marginal factor ``f_idx`` expected under policy ``p_idx`` at timepoint ``t_idx``.
+
+        Examples
+        --------
+        Discrete observations:
+
+        >>> obs = [0, 1]  # Modality 0 observed outcome 0, modality 1 observed outcome 1
+        >>> qs = agent.infer_states(obs, prior)
+
+        Categorical observations:
+
+        >>> obs = [
+        ...     jnp.array([0.7, 0.2, 0.1]),  # Peaked belief distribution for outcome 0
+        ...     jnp.array([0.5, 0.5])        # Flat belief distribution for outcome 1
+        ... ]
+        >>> agent_cat = Agent(..., categorical_obs=True)
+        >>> qs = agent_cat.infer_states(obs, prior)
         """
 
+        use_categorical = categorical_obs or self.categorical_obs
+
         # TODO: infer this from shapes
-        if not self.onehot_obs and not onehot_obs:
+        if not use_categorical:
             o_vec = [nn.one_hot(o, self.num_obs[m]) for m, o in enumerate(observations)]
         else:
             o_vec = observations
@@ -513,6 +573,7 @@ class Agent(Module):
             B_dependencies=self.B_dependencies,
             num_iter=self.num_iter,
             method=self.inference_algo,
+            distr_obs=True,  # Always True because o_vec is always distributional after one-hot conversion
         )
         
         output = vmap(infer_states)(

@@ -22,12 +22,13 @@ def update_posterior_states(
     B_dependencies=None,
     num_iter=16,
     method="fpi",
+    distr_obs=True,
 ):
 
     if method == "fpi" or method == "ovf":
         # format obs to select only last observation
         curr_obs = jtu.tree_map(lambda x: x[-1], obs)
-        qs = run_factorized_fpi(A, curr_obs, prior, A_dependencies, num_iter=num_iter)
+        qs = run_factorized_fpi(A, curr_obs, prior, A_dependencies, num_iter=num_iter, distr_obs=distr_obs)
     else:
         # format B matrices using action sequences here
         # TODO: past_actions can be None
@@ -55,6 +56,7 @@ def update_posterior_states(
                 A_dependencies,
                 B_dependencies,
                 num_iter=num_iter,
+                distr_obs=distr_obs,
             )
         if method == "mmp":
             qs = run_mmp(
@@ -65,6 +67,7 @@ def update_posterior_states(
                 A_dependencies,
                 B_dependencies,
                 num_iter=num_iter,
+                distr_obs=distr_obs,
             )
 
     if qs_hist is not None:
